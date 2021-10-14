@@ -1,0 +1,40 @@
+{
+	"info": {
+		"_postman_id": "6ecfd0ec-d409-4488-ad33-cf30a1fd2450",
+		"name": "Cart API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create checkout by cartId",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"url\": \"amazon.co.uk\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3333/api/v1/checkouts/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3333",
+					"path": [
+						"api",
+						"v1",
+						"checkouts",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

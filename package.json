@@ -3,14 +3,30 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "start:api": "nx serve api",
+    "build:api": "nx build api",
+    "test:api": "nx test api",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config apps/api/src/database/config/typeorm_config.ts",
+    "migrate:up": "npm run typeorm migration:run",
+    "migrate:down": "npm run typeorm migration:revert",
     "start": "nx serve",
     "build": "nx build",
     "test": "nx test"
   },
   "private": true,
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "dotenv-save": "^1.2.0",
     "express": "4.17.1",
-    "tslib": "^2.0.0"
+    "faker": "^5.5.3",
+    "json-rules-engine": "^6.1.2",
+    "lodash.get": "^4.4.2",
+    "pg": "^8.7.1",
+    "shelljs": "^0.8.4",
+    "supertest": "^6.1.6",
+    "tslib": "^2.0.0",
+    "typeorm": "^0.2.38"
   },
   "devDependencies": {
     "@nrwl/cli": "12.10.0",

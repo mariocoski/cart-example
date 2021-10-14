@@ -1,94 +1,185 @@
-
-
 # Cart
 
-This project was generated using [Nx](https://nx.dev).
+WARNING: full API is not ready yet
 
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="450"></p>
+The only hardcoded (entities created by migrations) is endpoint available to call (where 1 is a cartId /api/v1/checkouts/:cartId):
 
-🔎 **Smart, Extensible Build Framework**
+```sh
+PUT http://localhost:3333:/api/v1/checkouts/1
+```
 
-## Adding capabilities to your workspace
+It returns:
 
-Nx supports many plugins which add capabilities for developing different types of applications and different tools.
+```json
+{
+  "id": 1,
+  "cartId": 1,
+  "tax": {
+    "raw": 9.37,
+    "formatted": "9.37",
+    "formattedWithSymbol": "$9.37",
+    "formattedWithCode": "9.37 USD"
+  },
+  "currency": {
+    "code": "USD",
+    "symbol": "$"
+  },
+  "products": [
+    {
+      "id": 1,
+      "name": "Apple",
+      "price": "10.99",
+      "quantity": 2
+    },
+    {
+      "id": 3,
+      "name": "Strawberry",
+      "price": "19.99",
+      "quantity": 1
+    },
+    {
+      "id": 4,
+      "name": "Pineapple",
+      "price": "24.99",
+      "quantity": 1
+    }
+  ],
+  "subtotal": {
+    "raw": 66.96,
+    "formatted": "66.96",
+    "formattedWithSymbol": "$66.96",
+    "formattedWithCode": "66.96 USD"
+  },
+  "subtotalAfterTax": {
+    "raw": 76.33,
+    "formatted": "76.33",
+    "formattedWithSymbol": "$76.33",
+    "formattedWithCode": "76.33 USD"
+  },
+  "discounts": [
+    {
+      "productId": 3,
+      "value": {
+        "raw": 9.99,
+        "formatted": "9.99",
+        "formattedWithSymbol": "$9.99",
+        "formattedWithCode": "9.99 USD"
+      }
+    },
+    {
+      "productId": 4,
+      "value": {
+        "raw": 2.5,
+        "formatted": "2.50",
+        "formattedWithSymbol": "$2.50",
+        "formattedWithCode": "2.50 USD"
+      }
+    }
+  ],
+  "total": {
+    "raw": 63.84,
+    "formatted": "63.84",
+    "formattedWithSymbol": "$63.84",
+    "formattedWithCode": "63.84 USD"
+  }
+}
+```
 
-These capabilities include generating applications, libraries, etc as well as the devtools to test, and build projects as well.
+## Postman collection is available in root directory:
 
-Below are our core plugins:
+Import "Cart API.postman_collection.json" into a postman.
+You can also visit: `apps/api/src/presenter/functions/createCheckout.spec.ts` to see the request in integration test.
 
-- [React](https://reactjs.org)
-  - `npm install --save-dev @nrwl/react`
-- Web (no framework frontends)
-  - `npm install --save-dev @nrwl/web`
-- [Angular](https://angular.io)
-  - `npm install --save-dev @nrwl/angular`
-- [Nest](https://nestjs.com)
-  - `npm install --save-dev @nrwl/nest`
-- [Express](https://expressjs.com)
-  - `npm install --save-dev @nrwl/express`
-- [Node](https://nodejs.org)
-  - `npm install --save-dev @nrwl/node`
+All data has been inserted into DB via seed:
+`apps/api/src/database/migrations/1634071953686-initial_db_seed.ts`
 
-There are also many [community plugins](https://nx.dev/community) you could add.
+API uses [rules engine](https://github.com/cachecontrol/json-rules-engine)
+And rules can be stored in db and are dynamically loaded i.e.
 
-## Generate an application
+```js
+await queryRunner.query(`
+        INSERT INTO product_discounts 
+             (id, title, description, product_id, rule, discount) 
+        VALUES 
+            (1, '10% off Pineapple', 'Pineapple is on 10% off', 4, '{"any":[{"all":[{"fact":"id","operator":"equal","value":4}]}]}', 0.1),
+            (2, '50% off Strawberry', 'Buy two Apple and get a Strawberry half its price', 3, '{"any":[{"all":[{"fact":"quantity","operator":"greaterThanInclusive","value":2},{"fact":"id","operator":"equal","value":1}]},{"all":[{"fact":"id","operator":"equal","value":3}]}]}', 0.5)
+    `);
+```
 
-Run `nx g @nrwl/react:app my-app` to generate an application.
+Which translates to:
 
-> You can use any of the plugins above to generate applications as well.
+1. Pinapple (productId = 4) is 10% off (0.1 \* originalPrice) when exists in the basket
+2. Strawberry (productId = 3) is 50% off (0.5 \* originalPrice) when exists in the basket AND Apple (productId = 1) exists in the basket and it's quantity is greater or equal 2
 
-When using Nx, you can create multiple applications and libraries in the same workspace.
+TODO: missing APIs
 
-## Generate a library
+```js
+// POST     /carts <- create new cart
+// GET      /carts/:cartId <- get cart by id
+// DELETE   /carts/:cartId <- delete cart by id
+// POST     /carts/:cartId/products <- add product to the cart
+// DELETE   /carts/:cartId/products <- empty cart
+// PATCH    /carts/:cartId/products/:productId <- update quantity of a product in cart
+// DELETE   /carts/:cartId/products/:productId <- remove product from the cart
+```
 
-Run `nx g @nrwl/react:lib my-lib` to generate a library.
+## Prerequesites
 
-> You can also use any of the plugins above to generate libraries as well.
+1. Make sure you have docker and docker-compose installed on your machine, install all dependencies and build API:
 
-Libraries are shareable across libraries and applications. They can be imported from `@cart/mylib`.
+```sh
+docker -v
+docker-compose -v
 
-## Development server
+# install dependencies
+npm install --legacy-peer-deps
 
-Run `nx serve my-app` for a dev server. Navigate to http://localhost:4200/. The app will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `nx g @nrwl/react:component my-component --project=my-app` to generate a new component.
-
-## Build
-
-Run `nx build my-app` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `nx test my-app` to execute the unit tests via [Jest](https://jestjs.io).
-
-Run `nx affected:test` to execute the unit tests affected by a change.
-
-## Running end-to-end tests
-
-Run `ng e2e my-app` to execute the end-to-end tests via [Cypress](https://www.cypress.io).
-
-Run `nx affected:e2e` to execute the end-to-end tests affected by a change.
-
-## Understand your workspace
-
-Run `nx dep-graph` to see a diagram of the dependencies of your projects.
-
-## Further help
-
-Visit the [Nx Documentation](https://nx.dev) to learn more.
+# build
+npm run build:api
 
 
+# copy .env.example to .env file used by api and database
+cp .env.example .env
+```
 
-## ☁ Nx Cloud
+## Running the app
 
-### Distributed Computation Caching & Distributed Task Execution
+0. Build the app
 
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-cloud-card.png"></p>
+```sh
+docker-compose build
+```
 
-Nx Cloud pairs with Nx in order to enable you to build and test code more rapidly, by up to 10 times. Even teams that are new to Nx can connect to Nx Cloud and start saving time instantly.
+1. Run api and db with docker-compose
 
-Teams using Nx gain the advantage of building full-stack applications with their preferred framework alongside Nx’s advanced code generation and project dependency graph, plus a unified experience for both frontend and backend developers.
+```sh
+docker-compose up -d
+```
 
-Visit [Nx Cloud](https://nx.app/) to learn more.
+2. Migrate database
+
+```sh
+docker-compose exec api npm run migrate:up
+```
+
+3. Run a single endpoint available i.e. in postman
+
+```sh
+PUT http://localhost:3333/api/v1/checkouts/1
+```
+
+## Stopping the app
+
+2. Stop api and db with docker-compose
+
+```sh
+docker-compose down
+```
+
+## Testing the app (integration tests)
+
+1. Make sure you run all of the steps from `Prerequesites` section:
+
+```sh
+npm run test:api
+```
